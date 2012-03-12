@@ -26,9 +26,10 @@ directory_exists = False;
 while(directory_exists == False):
   print '\033[94m-Target Directory-\033[00m'
   directory = raw_input( '<full directory\'s name>: ' )
+
   if(os.path.exists(directory) == True):
     print '\033[92mTarget directory exists\033[00m'
-    wait_dir_exists = os.path.exists(directory + os.sep + organization)
+    wait_dir_exists = os.path.exists(os.path.join(os.path.normpath(directory),organization))
 
     if(wait_dir_exists  == True):
       print '\033[93m' + organization + ' directory already exists in ' + directory + '\033[00m'
@@ -54,8 +55,8 @@ while(directory_exists == False):
         if(overwrite == 'n'):
           wait_dir_exists = True
         else:
-          print '\033[91mDeleting ' + directory + os.sep + organization + '\033[00m'
-          shutil.rmtree(directory + os.sep + organization);
+          print '\033[91mDeleting ' + os.path.join(os.path.normpath(directory), organization) + '\033[00m'
+          shutil.rmtree(os.path.join(os.path.normpath(directory), organization));
           wait_dir_exists = False
 
     print ''
@@ -65,27 +66,29 @@ while(directory_exists == False):
       print organization + ' will be created in ' + directory
       directory_exists = True
       # create dir
-      os.mkdir(directory + os.sep + organization)
+      os.mkdir(os.path.join(os.path.normpath(directory), organization))
       # get info
       f2 = urllib.urlopen('https://api.github.com/orgs/' + organization + '/repos')
       answer2 = f2.read()
-      found=answer2.find('clone_url')
-      while found > -1:
-        begin=answer2.find('https', found+1);
+      foundcurl=answer2.find('\"clone_url\"')
+      foundname=answer2.find('\"name\"')
+      while foundcurl > -1:
+        begin=answer2.find('https', foundcurl+1);
         end=answer2.find('\"', begin+1);
 
         address = answer2[begin:end]
 
-
-        namepos = answer2.find('\"name\"', end+1)
-        beginname = answer2.find('\"', namepos+7)
+        beginname = answer2.find('\"', foundname+7)
         endname = answer2.find('\"', beginname+1)
+
 
         name = answer2[beginname+1:endname]
 
         # pull
-        os.system('git clone ' + address + ' ' + directory + os.sep + organization + os.sep + name)             
-        found=answer2.find('clone_url', end+1)
+        os.system('git clone ' + address + ' ' + os.path.join(os.path.join(os.path.normpath(directory),organization), name))             
+
+        foundcurl=answer2.find('\"clone_url\"', end)
+        foundname=answer2.find('\"name\"', endname)
 
   else:
     print '\033[93mTarget directory does not exist\033[00m\n'
